@@ -269,7 +269,7 @@ function updateSelectedSummary() {
     `).join('');
 }
 
-function goToStep3() {
+async function goToStep3() {
     if (selectedResources.length === 0) {
         showMessage('step2-message', '请至少选择一个资源', 'error');
         return;
@@ -277,6 +277,23 @@ function goToStep3() {
     
     renderSelectedPreview();
     goToStep(3);
+    
+    const ipHint = document.getElementById('ip-hint');
+    const ipInput = document.getElementById('ip-input');
+    ipHint.style.display = 'none';
+    ipInput.value = '';
+    
+    if (app) {
+        try {
+            const result = await app.GetPublicIP();
+            if (result.success && result.message) {
+                ipInput.value = result.message;
+                ipHint.style.display = 'block';
+            }
+        } catch (e) {
+            console.log('Failed to get public IP:', e);
+        }
+    }
 }
 
 function renderSelectedPreview() {

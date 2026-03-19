@@ -9,15 +9,6 @@ import (
 	"time"
 )
 
-type Level int
-
-const (
-	LevelDebug Level = iota
-	LevelInfo
-	LevelWarn
-	LevelError
-)
-
 var (
 	logger      *slog.Logger
 	mu          sync.Mutex

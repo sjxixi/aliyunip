@@ -4,6 +4,8 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"io"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -561,6 +563,54 @@ func (a *App) addToPolarDB(ctx context.Context, clusterID, listName, ip string) 
 func (a *App) addToRedis(ctx context.Context, instanceID, groupName, ip string) error {
 	redisClient := redis.NewClient(a.client)
 	return redisClient.AddIPToWhitelist(ctx, instanceID, groupName, ip)
+}
+
+func (a *App) GetPublicIP() *ExecutionResult {
+	result := &ExecutionResult{}
+
+	ipServices := []string{
+		"https://api.ipify.org?format=text",
+		"https://ifconfig.me/ip",
+		"https://checkip.amazonaws.com",
+		"https://icanhazip.com",
+	}
+
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	for _, service := range ipServices {
+		resp, err := client.Get(service)
+		if err != nil {
+			logger.Debug("failed to get ip from service", "service", service, "error", err)
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			logger.Debug("service returned non-200 status", "service", service, "status", resp.StatusCode)
+			continue
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			logger.Debug("failed to read response body", "service", service, "error", err)
+			continue
+		}
+
+		ip := strings.TrimSpace(string(body))
+		if ip != "" {
+			result.Success = true
+			result.Message = ip
+			logger.Info("successfully retrieved public ip", "ip", ip, "service", service)
+			return result
+		}
+	}
+
+	result.Success = false
+	result.Message = "无法自动获取公网 IP，请手动输入"
+	logger.Warn("failed to retrieve public ip from all services")
+	return result
 }
 
 func main() {

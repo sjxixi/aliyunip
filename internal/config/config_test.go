@@ -22,8 +22,6 @@ func TestConfigOperations(t *testing.T) {
 	cfg.AccessKeyID = "test-access-key-id"
 	cfg.AccessKeySecret = "test-access-key-secret"
 	cfg.Region = "cn-shanghai-finance-1"
-	cfg.Services["ecs"] = "ecs-cn-shanghai-finance-1.aliyuncs.com"
-	cfg.Services["slb"] = "slb-cn-shanghai-finance-1.aliyuncs.com"
 
 	if err := Save(cfg); err != nil {
 		t.Fatalf("Failed to save config: %v", err)
@@ -44,9 +42,5 @@ func TestConfigOperations(t *testing.T) {
 
 	if loadedCfg.Region != cfg.Region {
 		t.Errorf("Region mismatch: expected %s, got %s", cfg.Region, loadedCfg.Region)
-	}
-
-	if len(loadedCfg.Services) != len(cfg.Services) {
-		t.Errorf("Services count mismatch: expected %d, got %d", len(cfg.Services), len(loadedCfg.Services))
 	}
 }

@@ -184,15 +184,3 @@ func (c *Client) doRequestWithRetry(ctx context.Context, request requests.AcsReq
 func (c *Client) GetRegion() string {
 	return c.region
 }
-
-func (c *Client) GetSDKClient() *sdk.Client {
-	return c.sdkClient
-}
-
-func (c *Client) GetAccessKeyID() string {
-	return c.accessKeyID
-}
-
-func (c *Client) GetAccessKeySecret() string {
-	return c.accessKeySecret
-}

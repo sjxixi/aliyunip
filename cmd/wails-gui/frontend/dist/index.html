@@ -129,6 +129,10 @@
                 <div class="selected-resources-preview" id="selected-preview"></div>
                 <div class="form-group">
                     <label for="ip-input">IP 地址</label>
+                    <div class="ip-hint" id="ip-hint" style="display: none; padding: 10px 12px; margin-bottom: 8px; background-color: #e7f3ff; border: 1px solid #b6d4fe; border-radius: 4px; color: #084298; font-size: 14px;">
+                        <span style="font-weight: 500;">💡 提示：</span>
+                        <span id="ip-hint-text">系统已自动获取您当前的公网 IP 地址作为默认值，您可以根据需要进行修改或保留。</span>
+                    </div>
                     <input type="text" id="ip-input" placeholder="请输入 IP 地址或 CIDR，如 192.168.1.100 或 192.168.1.0/24">
                     <div class="error" id="ip-error"></div>
                 </div>

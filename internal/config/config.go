@@ -8,10 +8,9 @@ import (
 )
 
 type Config struct {
-	AccessKeyID     string            `json:"access_key_id"`
-	AccessKeySecret string            `json:"access_key_secret"`
-	Region          string            `json:"region"`
-	Services        map[string]string `json:"services"`
+	AccessKeyID     string `json:"access_key_id"`
+	AccessKeySecret string `json:"access_key_secret"`
+	Region          string `json:"region"`
 }
 
 const (
@@ -99,7 +98,5 @@ func Load() (*Config, error) {
 }
 
 func New() *Config {
-	return &Config{
-		Services: make(map[string]string),
-	}
+	return &Config{}
 }

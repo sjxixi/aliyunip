@@ -1,0 +1,63 @@
+# Compiled binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+aliyunip-cli
+aliyunip-gui
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# IDE files
+.idea/
+.vscode/
+.trae/
+*.swp
+*.swo
+*~
+
+# Wails build files
+build/
+wailsjs/
+*.app
+*.dmg
+*.pkg
+
+# Log files
+*.log
+logs/
+
+# Configuration files with sensitive data
+config.json
+*.local.json
+*.env
+*.env.local
+*.env.*.local
+
+# Operating system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.cache/

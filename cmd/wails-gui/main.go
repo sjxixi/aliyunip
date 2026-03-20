@@ -93,19 +93,14 @@ type SelectedResource struct {
 	Id              string `json:"id"`
 	Name            string `json:"name"`
 	SecurityIpGroup string `json:"securityIpGroup,omitempty"`
+	Port            string `json:"port,omitempty"`
+	Description     string `json:"description,omitempty"`
 }
 
 type ExecutionResult struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 	Error   string `json:"error,omitempty"`
-}
-
-type ProgressUpdate struct {
-	Step      int    `json:"step"`
-	Total     int    `json:"total"`
-	Message   string `json:"message"`
-	Completed bool   `json:"completed"`
 }
 
 func NewApp() *App {
@@ -416,17 +411,24 @@ func (a *App) ValidatePort(portStr string) *ExecutionResult {
 		return result
 	}
 
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		result.Success = false
-		result.Message = fmt.Sprintf("端口号格式无效: %v", err)
-		return result
-	}
+	ports := strings.Split(portStr, ",")
+	for _, p := range ports {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		port, err := strconv.Atoi(p)
+		if err != nil {
+			result.Success = false
+			result.Message = fmt.Sprintf("端口号格式无效: %v", err)
+			return result
+		}
 
-	if port < 1 || port > 65535 {
-		result.Success = false
-		result.Message = "端口号必须在 1-65535 之间"
-		return result
+		if port < 1 || port > 65535 {
+			result.Success = false
+			result.Message = "端口号必须在 1-65535 之间"
+			return result
+		}
 	}
 
 	result.Success = true
@@ -458,11 +460,28 @@ func (a *App) ExecuteConfig(ip string, port int, description string, resources [
 		case "alb":
 			err = a.addToALB(ctx, resource.Id, ip, description)
 		case "ecs":
-			portRange := fmt.Sprintf("%d/%d", port, port)
-			if port == 0 {
-				portRange = "1/65535"
+			portStr := resource.Port
+			if portStr == "" {
+				err = a.addToECS(ctx, resource.Id, "1/65535", "tcp", ip, resource.Description)
+			} else {
+				ports := strings.Split(portStr, ",")
+				for _, p := range ports {
+					p = strings.TrimSpace(p)
+					if p == "" {
+						continue
+					}
+					portNum, parseErr := strconv.Atoi(p)
+					if parseErr != nil {
+						err = parseErr
+						break
+					}
+					portRange := fmt.Sprintf("%d/%d", portNum, portNum)
+					err = a.addToECS(ctx, resource.Id, portRange, "tcp", ip, resource.Description)
+					if err != nil {
+						break
+					}
+				}
 			}
-			err = a.addToECS(ctx, resource.Id, portRange, "tcp", ip, "")
 		case "cloudfw":
 			err = a.addToCloudFW(ctx, resource.Id, ip)
 		case "rds":

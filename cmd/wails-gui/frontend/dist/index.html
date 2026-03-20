@@ -126,10 +126,9 @@
 
             <div class="step-content step-3-content" id="step3">
                 <h2>步骤 3: 配置 IP 地址</h2>
-                <div class="selected-resources-preview" id="selected-preview"></div>
                 <div class="form-group">
                     <label for="ip-input">IP 地址</label>
-                    <div class="ip-hint" id="ip-hint" style="display: none; padding: 10px 12px; margin-bottom: 8px; background-color: #e7f3ff; border: 1px solid #b6d4fe; border-radius: 4px; color: #084298; font-size: 14px;">
+                    <div class="ip-hint" id="ip-hint" style="display: none; padding: 8px 10px; margin-bottom: 6px; background-color: #e7f3ff; border: 1px solid #b6d4fe; border-radius: 4px; color: #084298; font-size: 13px;">
                         <span style="font-weight: 500;">💡 提示：</span>
                         <span id="ip-hint-text">系统已自动获取您当前的公网 IP 地址作为默认值，您可以根据需要进行修改或保留。</span>
                     </div>
@@ -137,14 +136,10 @@
                     <div class="error" id="ip-error"></div>
                 </div>
                 <div class="form-group">
-                    <label for="port-input">端口号 (仅 ECS 安全组)</label>
-                    <input type="text" id="port-input" placeholder="请输入端口号，如 8080（留空则开放所有端口）">
-                    <div class="error" id="port-error"></div>
-                </div>
-                <div class="form-group">
                     <label for="description-input">备注 (仅 ALB)</label>
                     <input type="text" id="description-input" placeholder="请输入备注信息（仅对 ALB 有效）">
                 </div>
+                <div class="selected-resources-preview" id="selected-preview"></div>
                 <div class="button-group">
                     <button class="btn-secondary" id="step3-back">返回上一步</button>
                     <button class="btn-primary" id="step3-next">下一步</button>

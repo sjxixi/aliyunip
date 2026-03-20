@@ -191,6 +191,7 @@ function renderResourceList(containerId, items, type, idField, nameField) {
                         </select>
                     </div>
                 ` : ''}
+                ${type === 'ecs' ? '' : ''}
             </div>
         `;
         
@@ -198,12 +199,12 @@ function renderResourceList(containerId, items, type, idField, nameField) {
             if (e.target.type !== 'checkbox' && e.target.tagName !== 'SELECT') {
                 const checkbox = div.querySelector('input[type="checkbox"]');
                 checkbox.checked = !checkbox.checked;
-                toggleResource(checkbox);
+                toggleResource(checkbox, item, type);
             }
         });
         
         const checkbox = div.querySelector('input[type="checkbox"]');
-        checkbox.addEventListener('change', () => toggleResource(checkbox));
+        checkbox.addEventListener('change', () => toggleResource(checkbox, item, type));
         
         const select = div.querySelector('select');
         if (select) {
@@ -224,8 +225,7 @@ function renderResourceList(containerId, items, type, idField, nameField) {
     });
 }
 
-function toggleResource(checkbox) {
-    const type = checkbox.dataset.type;
+function toggleResource(checkbox, item, type) {
     const id = checkbox.dataset.id;
     const name = checkbox.dataset.name;
     const defaultGroup = checkbox.dataset.defaultGroup;
@@ -241,6 +241,11 @@ function toggleResource(checkbox) {
     if (checkbox.checked) {
         parent.classList.add('selected');
         const resource = { type, id, name, securityIpGroup: securityIpGroup };
+        
+        if (type === 'ecs' && item && item.description) {
+            resource.sgDescription = item.description;
+        }
+        
         selectedResources.push(resource);
     } else {
         parent.classList.remove('selected');
@@ -298,39 +303,121 @@ async function goToStep3() {
 
 function renderSelectedPreview() {
     const preview = document.getElementById('selected-preview');
-    preview.innerHTML = `
-        <h3>已选择的资源 (${selectedResources.length})</h3>
-        <div class="preview-list">
-            ${selectedResources.map(r => `
-                <div class="preview-item">
-                    <div class="item-type">${r.type.toUpperCase()}</div>
-                    <div class="item-name">
-                        ${escapeHtml(r.name)}
-                        ${r.securityIpGroup ? `<span style="font-size: 12px; color: #888; margin-left: 8px;">分组: ${escapeHtml(r.securityIpGroup)}</span>` : ''}
+    const ecsResources = selectedResources.filter(r => r.type === 'ecs');
+    const otherResources = selectedResources.filter(r => r.type !== 'ecs');
+    
+    let html = `<h3>已选择的资源 (${selectedResources.length})</h3>`;
+    
+    if (ecsResources.length > 0) {
+        html += `
+            <h4 style="margin: 12px 0 8px; font-size: 14px; color: #666;">ECS 安全组 - 请为每个安全组单独配置</h4>
+            <div class="preview-list ecs-list">
+                ${ecsResources.map(r => `
+                    <div class="preview-item ecs-preview-item">
+                        <div class="item-header">
+                            <div class="item-type">${r.type.toUpperCase()}</div>
+                            <div class="item-name-group">
+                                <div class="item-name">${escapeHtml(r.name)}</div>
+                                ${r.securityIpGroup ? `<div class="item-group">分组: ${escapeHtml(r.securityIpGroup)}</div>` : ''}
+                            </div>
+                        </div>
+                        ${r.sgDescription ? `
+                            <div class="sg-description">
+                                <span class="sg-description-label">安全组描述</span>
+                                ${escapeHtml(r.sgDescription)}
+                            </div>
+                        ` : ''}
+                        <div class="input-section">
+                            <label class="input-label">端口</label>
+                            <input type="text" 
+                                   class="ecs-port-preview-input" 
+                                   data-id="${r.id}"
+                                   value="${r.port || ''}"
+                                   placeholder="如 80,443,8080（多个用逗号分隔，留空则开放所有端口）">
+                        </div>
+                        <div class="input-section" style="margin-top: 10px;">
+                            <label class="input-label">规则描述</label>
+                            <input type="text" 
+                                   class="ecs-desc-preview-input" 
+                                   data-id="${r.id}"
+                                   value="${r.description || ''}"
+                                   placeholder="规则描述（可选）">
+                        </div>
                     </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    if (otherResources.length > 0) {
+        html += `
+            <h4 style="margin: 16px 0 8px; font-size: 14px; color: #666;">其他资源</h4>
+            <div class="preview-list other-list">
+                ${otherResources.map(r => `
+                    <div class="preview-item ecs-preview-item">
+                        <div class="item-header">
+                            <div class="item-type">${r.type.toUpperCase()}</div>
+                            <div class="item-name-group">
+                                <div class="item-name">${escapeHtml(r.name)}</div>
+                                ${r.securityIpGroup ? `<div class="item-group">分组: ${escapeHtml(r.securityIpGroup)}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    preview.innerHTML = html;
+    
+    const portInputs = preview.querySelectorAll('.ecs-port-preview-input');
+    portInputs.forEach(input => {
+        input.addEventListener('input', (e) => {
+            const id = e.target.dataset.id;
+            const value = e.target.value;
+            const resource = selectedResources.find(r => r.id === id && r.type === 'ecs');
+            if (resource) {
+                resource.port = value;
+            }
+        });
+    });
+    
+    const descInputs = preview.querySelectorAll('.ecs-desc-preview-input');
+    descInputs.forEach(input => {
+        input.addEventListener('input', (e) => {
+            const id = e.target.dataset.id;
+            const value = e.target.value;
+            const resource = selectedResources.find(r => r.id === id && r.type === 'ecs');
+            if (resource) {
+                resource.description = value;
+            }
+        });
+    });
 }
 
 async function goToStep4() {
     const ipInput = document.getElementById('ip-input').value.trim();
-    const portInput = document.getElementById('port-input').value.trim();
     const descInput = document.getElementById('description-input').value.trim();
     
     document.getElementById('ip-error').textContent = '';
-    document.getElementById('port-error').textContent = '';
     
     if (!app) {
         showMessage('step3-message', '无法连接到后端', 'error');
         return;
     }
     
-    let ipValid, portValid;
+    let ipValid;
     try {
         ipValid = await app.ValidateIP(ipInput);
-        portValid = await app.ValidatePort(portInput);
+        
+        const ecsResources = selectedResources.filter(r => r.type === 'ecs');
+        for (const resource of ecsResources) {
+            const portValid = await app.ValidatePort(resource.port || '');
+            if (!portValid.success) {
+                showMessage('step3-message', `安全组 "${resource.name}" 的端口配置错误: ${portValid.message}`, 'error');
+                return;
+            }
+        }
     } catch (e) {
         showMessage('step3-message', '验证失败: ' + (e.message || e), 'error');
         return;
@@ -341,13 +428,7 @@ async function goToStep4() {
         return;
     }
     
-    if (!portValid.success) {
-        document.getElementById('port-error').textContent = portValid.message;
-        return;
-    }
-    
     ipAddress = ipInput;
-    portNumber = portInput ? parseInt(portInput) : 0;
     description = descInput;
     
     renderExecutionPreview();
@@ -356,19 +437,16 @@ async function goToStep4() {
 
 function renderExecutionPreview() {
     const preview = document.getElementById('execution-preview');
-    preview.innerHTML = `
+    const ecsResources = selectedResources.filter(r => r.type === 'ecs');
+    const otherResources = selectedResources.filter(r => r.type !== 'ecs');
+    
+    let html = `
         <h3>即将执行的配置</h3>
         <div class="preview-list">
             <div class="preview-item">
                 <div class="item-type">IP</div>
                 <div class="item-name">${escapeHtml(ipAddress)}</div>
             </div>
-            ${portNumber > 0 ? `
-                <div class="preview-item">
-                    <div class="item-type">端口</div>
-                    <div class="item-name">${portNumber}</div>
-                </div>
-            ` : ''}
             ${description ? `
                 <div class="preview-item">
                     <div class="item-type">备注</div>
@@ -377,18 +455,57 @@ function renderExecutionPreview() {
             ` : ''}
         </div>
         <h3 style="margin-top: 16px;">目标资源 (${selectedResources.length})</h3>
-        <div class="preview-list">
-            ${selectedResources.map(r => `
-                <div class="preview-item">
-                    <div class="item-type">${r.type.toUpperCase()}</div>
-                    <div class="item-name">
-                        ${escapeHtml(r.name)}
-                        ${r.securityIpGroup ? `<span style="font-size: 12px; color: #888; margin-left: 8px;">分组: ${escapeHtml(r.securityIpGroup)}</span>` : ''}
-                    </div>
-                </div>
-            `).join('')}
-        </div>
     `;
+    
+    if (ecsResources.length > 0) {
+        html += `
+            <h4 style="margin: 12px 0 8px; font-size: 14px; color: #666;">ECS 安全组</h4>
+            <div class="preview-list ecs-list">
+                ${ecsResources.map(r => `
+                    <div class="preview-item ecs-preview-item">
+                        <div class="item-header">
+                            <div class="item-type">${r.type.toUpperCase()}</div>
+                            <div class="item-name-group">
+                                <div class="item-name">${escapeHtml(r.name)}</div>
+                                ${r.securityIpGroup ? `<div class="item-group">分组: ${escapeHtml(r.securityIpGroup)}</div>` : ''}
+                            </div>
+                        </div>
+                        ${r.sgDescription ? `
+                            <div class="sg-description">
+                                <span class="sg-description-label">安全组描述</span>
+                                ${escapeHtml(r.sgDescription)}
+                            </div>
+                        ` : ''}
+                        <div class="execution-details">
+                            ${r.port ? `<div class="detail-item"><span class="detail-label">端口:</span> ${escapeHtml(r.port)}</div>` : `<div class="detail-item"><span class="detail-label">端口:</span> 所有端口</div>`}
+                            ${r.description ? `<div class="detail-item"><span class="detail-label">规则描述:</span> ${escapeHtml(r.description)}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    if (otherResources.length > 0) {
+        html += `
+            <h4 style="margin: 16px 0 8px; font-size: 14px; color: #666;">其他资源</h4>
+            <div class="preview-list other-list">
+                ${otherResources.map(r => `
+                    <div class="preview-item ecs-preview-item">
+                        <div class="item-header">
+                            <div class="item-type">${r.type.toUpperCase()}</div>
+                            <div class="item-name-group">
+                                <div class="item-name">${escapeHtml(r.name)}</div>
+                                ${r.securityIpGroup ? `<div class="item-group">分组: ${escapeHtml(r.securityIpGroup)}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    preview.innerHTML = html;
 }
 
 async function executeConfig() {
@@ -459,9 +576,7 @@ function restart() {
     document.getElementById('step2-message').textContent = '';
     document.getElementById('step3-message').textContent = '';
     document.getElementById('ip-error').textContent = '';
-    document.getElementById('port-error').textContent = '';
     document.getElementById('ip-input').value = '';
-    document.getElementById('port-input').value = '';
     document.getElementById('description-input').value = '';
     document.getElementById('selected-summary').style.display = 'none';
     

@@ -116,7 +116,7 @@ h3 {
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .form-group label {
@@ -300,7 +300,7 @@ h3 {
 
 .resource-list.two-columns {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
     padding: 12px;
 }
@@ -407,29 +407,248 @@ h3 {
 }
 
 .preview-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.preview-list.ecs-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.preview-list.other-list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 1024px) {
+    .preview-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .preview-list.ecs-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .preview-list.other-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .preview-list {
+        grid-template-columns: 1fr;
+    }
+    .preview-list.ecs-list {
+        grid-template-columns: 1fr;
+    }
+    .preview-list.other-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .preview-list {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .preview-list.ecs-list {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .preview-list.other-list {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
 }
 
 .preview-item {
-    padding: 10px 14px;
-    background: white;
-    border-radius: 6px;
-    border-left: 4px solid #667eea;
+    padding: 18px;
+    border-radius: 10px;
+    border-left: 6px solid #667eea;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    box-shadow: 0 3px 12px rgba(102, 126, 234, 0.12);
+    transition: all 0.3s ease;
+    min-height: 100px;
+}
+
+.preview-item:hover {
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
 }
 
 .preview-item .item-type {
-    font-size: 12px;
-    color: #667eea;
+    display: inline-block;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 4px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
     font-weight: 600;
     text-transform: uppercase;
 }
 
 .preview-item .item-name {
-    font-size: 14px;
-    color: #333;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-top: 12px;
+    line-height: 1.4;
+}
+
+.preview-item.ecs-preview-item {
+    padding: 18px;
+    border-radius: 10px;
+    border-left: 6px solid #667eea;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    box-shadow: 0 3px 12px rgba(102, 126, 234, 0.12);
+    transition: all 0.3s ease;
+    min-height: 100px;
+}
+
+.preview-item.ecs-preview-item:hover {
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
+}
+
+.preview-item.ecs-preview-item .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e8eaf6;
+}
+
+.preview-item.ecs-preview-item .item-type {
+    display: inline-block;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 4px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+.preview-item.ecs-preview-item .item-name-group {
+    flex: 1;
+    margin-left: 12px;
+}
+
+.preview-item.ecs-preview-item .item-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-top: 0;
+    line-height: 1.4;
+}
+
+.preview-item.ecs-preview-item .item-group {
+    display: inline-block;
     margin-top: 4px;
+    font-size: 12px;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.preview-item.ecs-preview-item .sg-description {
+    background: #f0f4ff;
+    border-left: 3px solid #93c5fd;
+    padding: 10px 12px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.5;
+}
+
+.preview-item.ecs-preview-item .sg-description-label {
+    font-weight: 600;
+    color: #1e40af;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.preview-item.ecs-preview-item .input-section {
+    margin-top: 12px;
+}
+
+.preview-item.ecs-preview-item .input-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.preview-item.ecs-preview-item .input-label .required {
+    color: #ef4444;
+}
+
+.preview-item.ecs-preview-item .ecs-port-preview-input,
+.preview-item.ecs-preview-item .ecs-desc-preview-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.preview-item.ecs-preview-item .ecs-port-preview-input:focus,
+.preview-item.ecs-preview-item .ecs-desc-preview-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+}
+
+.preview-item.ecs-preview-item .ecs-port-preview-input::placeholder,
+.preview-item.ecs-preview-item .ecs-desc-preview-input::placeholder {
+    color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+    .preview-item.ecs-preview-item .item-header {
+        flex-direction: column;
+    }
+    
+    .preview-item.ecs-preview-item .item-name-group {
+        margin-left: 0;
+        margin-top: 8px;
+    }
+}
+
+.preview-item.ecs-preview-item .execution-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #d1d5db;
+}
+
+.preview-item.ecs-preview-item .detail-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #374151;
+}
+
+.preview-item.ecs-preview-item .detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.preview-item.ecs-preview-item .detail-label {
+    font-weight: 600;
+    color: #4b5563;
+    margin-right: 8px;
+    min-width: 70px;
 }
 
 .execution-progress {

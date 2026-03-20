@@ -738,3 +738,112 @@ h3 {
 ::-webkit-scrollbar-thumb:hover {
     background: #a1a1a1;
 }
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.history-item {
+    padding: 16px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.history-item:hover {
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
+}
+
+.history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.history-timestamp {
+    font-size: 13px;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.history-ip {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.history-summary {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 8px;
+}
+
+.history-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #d1d5db;
+    display: none;
+}
+
+.history-details.expanded {
+    display: block;
+}
+
+.history-detail-row {
+    display: flex;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.history-detail-label {
+    font-weight: 600;
+    color: #4b5563;
+    min-width: 80px;
+}
+
+.history-detail-value {
+    color: #374151;
+    flex: 1;
+}
+
+.history-toggle-btn {
+    padding: 4px 12px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.history-toggle-btn:hover {
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+.history-apply-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.history-apply-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}

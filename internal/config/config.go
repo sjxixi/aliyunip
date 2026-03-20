@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sort"
+	"time"
 )
 
 type Config struct {
@@ -13,9 +15,29 @@ type Config struct {
 	Region          string `json:"region"`
 }
 
+type HistoryRecord struct {
+	ID          string            `json:"id"`
+	Timestamp   time.Time         `json:"timestamp"`
+	IPAddress   string            `json:"ip_address"`
+	Port        int               `json:"port"`
+	Description string            `json:"description"`
+	Resources   []HistoryResource `json:"resources"`
+}
+
+type HistoryResource struct {
+	Type            string `json:"type"`
+	Id              string `json:"id"`
+	Name            string `json:"name"`
+	SecurityIpGroup string `json:"security_ip_group,omitempty"`
+	Port            string `json:"port,omitempty"`
+	Description     string `json:"description,omitempty"`
+}
+
 const (
-	configDirName  = ".aliyun-ip-manager"
-	configFileName = "config.json"
+	configDirName     = ".aliyun-ip-manager"
+	configFileName    = "config.json"
+	historyFileName   = "history.json"
+	maxHistoryRecords = 5
 )
 
 func GetConfigDir() (string, error) {
@@ -99,4 +121,75 @@ func Load() (*Config, error) {
 
 func New() *Config {
 	return &Config{}
+}
+
+func GetHistoryPath() (string, error) {
+	configDir, err := GetConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(configDir, historyFileName), nil
+}
+
+func SaveHistory(record HistoryRecord) error {
+	configDir, err := GetConfigDir()
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(configDir, 0700); err != nil {
+		return err
+	}
+
+	historyPath, err := GetHistoryPath()
+	if err != nil {
+		return err
+	}
+
+	var history []HistoryRecord
+
+	if data, err := os.ReadFile(historyPath); err == nil {
+		if err := json.Unmarshal(data, &history); err != nil {
+			history = []HistoryRecord{}
+		}
+	}
+
+	history = append([]HistoryRecord{record}, history...)
+
+	if len(history) > maxHistoryRecords {
+		history = history[:maxHistoryRecords]
+	}
+
+	data, err := json.MarshalIndent(history, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(historyPath, data, 0600)
+}
+
+func LoadHistory() ([]HistoryRecord, error) {
+	historyPath, err := GetHistoryPath()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := os.ReadFile(historyPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []HistoryRecord{}, nil
+		}
+		return nil, err
+	}
+
+	var history []HistoryRecord
+	if err := json.Unmarshal(data, &history); err != nil {
+		return []HistoryRecord{}, nil
+	}
+
+	sort.Slice(history, func(i, j int) bool {
+		return history[i].Timestamp.After(history[j].Timestamp)
+	})
+
+	return history, nil
 }

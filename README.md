@@ -298,8 +298,4 @@ go test ./...
 
 如果您有任何问题或建议，请提交 [Issue](../../issues)。
 
----
 
-<p align="center">
-  <strong>项目状态</strong>: ✅ 生产就绪
-</p>

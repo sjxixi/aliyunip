@@ -5,6 +5,8 @@ let resourcesData = null;
 let ipAddress = '';
 let portNumber = 0;
 let description = '';
+let historyRecords = [];
+let selectedHistoryRecord = null;
 let sectionStates = {
     alb: false,
     ecs: false,
@@ -22,14 +24,20 @@ window.onload = function() {
 };
 
 function initButtons() {
-    document.getElementById('validate-btn').addEventListener('click', validateCredentials);
+    document.getElementById('validate-btn').addEventListener('click', handleValidateBtnClick);
     document.getElementById('step2-back').addEventListener('click', () => goToStep(1));
-    document.getElementById('step2-next').addEventListener('click', goToStep3);
+    document.getElementById('step2-next').addEventListener('click', () => goToStep(3));
     document.getElementById('step3-back').addEventListener('click', () => goToStep(2));
     document.getElementById('step3-next').addEventListener('click', goToStep4);
     document.getElementById('step4-back').addEventListener('click', () => goToStep(3));
+    document.getElementById('step4-next').addEventListener('click', goToStep5);
+    document.getElementById('step5-back').addEventListener('click', () => goToStep(4));
     document.getElementById('execute-btn').addEventListener('click', executeConfig);
     document.getElementById('restart-btn').addEventListener('click', restart);
+}
+
+async function handleValidateBtnClick() {
+    await validateCredentials();
 }
 
 function loadSavedConfig() {
@@ -53,6 +61,15 @@ function goToStep(step) {
     
     document.querySelectorAll('.step-content').forEach(c => c.classList.remove('active'));
     document.getElementById(`step${step}`).classList.add('active');
+    
+    if (step === 1) {
+        document.getElementById('validate-btn').textContent = '验证并继续';
+        resourcesData = null;
+    }
+    
+    if (step === 2 && historyRecords.length > 0) {
+        renderHistoryList();
+    }
     
     currentStep = step;
 }
@@ -79,7 +96,7 @@ async function validateCredentials() {
         const result = await app.ValidateCredentials(accessKeyId, accessKeySecret, region);
         
         if (result.success) {
-            showMessage('step1-message', result.message, 'success');
+            await loadHistory();
             await loadResources();
             goToStep(2);
         } else {
@@ -90,6 +107,150 @@ async function validateCredentials() {
     } finally {
         document.getElementById('validate-btn').disabled = false;
     }
+}
+
+async function loadHistory() {
+    if (!app) return;
+    
+    try {
+        const result = await app.GetHistory();
+        if (result.success && result.records && result.records.length > 0) {
+            historyRecords = result.records;
+            renderHistoryList();
+            document.getElementById('history-section').style.display = 'block';
+        }
+    } catch (e) {
+        console.log('Failed to load history:', e);
+    }
+}
+
+function renderHistoryList() {
+    const historyList = document.getElementById('history-list');
+    if (!historyList) return;
+    
+    historyList.innerHTML = historyRecords.map((record, index) => {
+        const timestamp = new Date(record.timestamp);
+        const formattedTime = formatTimestamp(timestamp);
+        const resourceSummary = record.resources ? record.resources.map(r => r.name).join(', ') : '';
+        
+        return `
+            <div class="history-item" data-index="${index}">
+                <div class="history-item-header">
+                    <span class="history-timestamp">${formattedTime}</span>
+                    <button class="history-toggle-btn" onclick="toggleHistoryDetails(event, ${index})">查看详情</button>
+                </div>
+                <div class="history-ip">IP: ${escapeHtml(record.ipAddress || record.ip_address)}</div>
+                <div class="history-summary">资源: ${escapeHtml(resourceSummary)}</div>
+                <div class="history-details" id="history-details-${index}">
+                    ${renderHistoryDetails(record)}
+                </div>
+                <button class="history-apply-btn" onclick="applyHistoryRecord(event, ${index})">应用此配置</button>
+            </div>
+        `;
+    }).join('');
+}
+
+function formatTimestamp(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+function renderHistoryDetails(record) {
+    let details = '';
+    
+    details += `
+        <div class="history-detail-row">
+            <span class="history-detail-label">IP地址:</span>
+            <span class="history-detail-value">${escapeHtml(record.ipAddress || record.ip_address)}</span>
+        </div>
+    `;
+    
+    if (record.description) {
+        details += `
+            <div class="history-detail-row">
+                <span class="history-detail-label">备注:</span>
+                <span class="history-detail-value">${escapeHtml(record.description)}</span>
+            </div>
+        `;
+    }
+    
+    details += '<div style="margin-top: 8px;"><strong>资源列表:</strong></div>';
+    
+    if (record.resources) {
+        record.resources.forEach(resource => {
+            details += `
+                <div class="history-detail-row">
+                    <span class="history-detail-label">${(resource.type || '').toUpperCase()}:</span>
+                    <span class="history-detail-value">${escapeHtml(resource.name)}</span>
+                </div>
+            `;
+            if (resource.port) {
+                details += `
+                    <div class="history-detail-row">
+                        <span class="history-detail-label">端口:</span>
+                        <span class="history-detail-value">${escapeHtml(resource.port)}</span>
+                    </div>
+                `;
+            }
+            if (resource.description) {
+                details += `
+                    <div class="history-detail-row">
+                        <span class="history-detail-label">规则描述:</span>
+                        <span class="history-detail-value">${escapeHtml(resource.description)}</span>
+                    </div>
+                `;
+            }
+        });
+    }
+    
+    return details;
+}
+
+function toggleHistoryDetails(event, index) {
+    event.stopPropagation();
+    const details = document.getElementById(`history-details-${index}`);
+    const btn = event.target;
+    
+    if (details.classList.contains('expanded')) {
+        details.classList.remove('expanded');
+        btn.textContent = '查看详情';
+    } else {
+        details.classList.add('expanded');
+        btn.textContent = '收起';
+    }
+}
+
+async function applyHistoryRecord(event, index) {
+    event.stopPropagation();
+    
+    const record = historyRecords[index];
+    if (!record) return;
+    
+    selectedHistoryRecord = record;
+    
+    selectedResources = (record.resources || []).map(r => ({
+        type: r.type,
+        id: r.id,
+        name: r.name,
+        securityIpGroup: r.securityIpGroup || r.security_ip_group || '',
+        port: r.port || '',
+        description: r.description || '',
+        sgDescription: r.sgDescription || r.sg_description || ''
+    }));
+    
+    ipAddress = record.ipAddress || record.ip_address;
+    description = record.description || '';
+    portNumber = record.port || 0;
+    
+    showMessage('step2-message', '已选择历史配置，正在进入配置页面...', 'success');
+    
+    setTimeout(() => {
+        applyHistoryToStep4();
+    }, 500);
 }
 
 async function loadResources() {
@@ -139,6 +300,40 @@ function renderResources() {
         document.getElementById(`content-${section}`).classList.add('collapsed');
         document.getElementById(`toggle-${section}`).textContent = '▶';
     });
+    
+    if (selectedHistoryRecord) {
+        applyHistoryToResources();
+    }
+}
+
+function applyHistoryToResources() {
+    if (!selectedHistoryRecord || !selectedHistoryRecord.resources) return;
+    
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][data-type]');
+    checkboxes.forEach(checkbox => {
+        const type = checkbox.dataset.type;
+        const id = checkbox.dataset.id;
+        
+        const matchingResource = selectedHistoryRecord.resources.find(
+            r => (r.type === type && r.id === id)
+        );
+        
+        if (matchingResource) {
+            checkbox.checked = true;
+            const parent = checkbox.closest('.resource-item');
+            if (parent) {
+                parent.classList.add('selected');
+            }
+            
+            const section = sectionStates[type] !== undefined ? type : 
+                           (type === 'ecs' ? 'ecs' : type);
+            if (!sectionStates[section]) {
+                toggleSection(section);
+            }
+        }
+    });
+    
+    updateSelectedSummary();
 }
 
 function renderResourceList(containerId, items, type, idField, nameField) {
@@ -273,31 +468,55 @@ function updateSelectedSummary() {
     `).join('');
 }
 
-async function goToStep3() {
-    if (selectedResources.length === 0) {
-        showMessage('step2-message', '请至少选择一个资源', 'error');
+async function goToStep4() {
+    if (selectedResources.length === 0 && !selectedHistoryRecord) {
+        showMessage('step3-message', '请至少选择一个资源', 'error');
         return;
     }
     
-    renderSelectedPreview();
-    goToStep(3);
-    
-    const ipHint = document.getElementById('ip-hint');
-    const ipInput = document.getElementById('ip-input');
-    ipHint.style.display = 'none';
-    ipInput.value = '';
-    
-    if (app) {
-        try {
-            const result = await app.GetPublicIP();
-            if (result.success && result.message) {
-                ipInput.value = result.message;
-                ipHint.style.display = 'block';
+    if (selectedHistoryRecord) {
+        applyHistoryToStep4();
+    } else {
+        renderSelectedPreview();
+        goToStep(4);
+        
+        const ipHint = document.getElementById('ip-hint');
+        const ipInput = document.getElementById('ip-input');
+        ipHint.style.display = 'none';
+        ipInput.value = '';
+        
+        if (app) {
+            try {
+                const result = await app.GetPublicIP();
+                if (result.success && result.message) {
+                    ipInput.value = result.message;
+                    ipHint.style.display = 'block';
+                }
+            } catch (e) {
+                console.log('Failed to get public IP:', e);
             }
-        } catch (e) {
-            console.log('Failed to get public IP:', e);
         }
     }
+}
+
+function applyHistoryToStep4() {
+    if (!selectedHistoryRecord) return;
+    
+    renderSelectedPreview();
+    goToStep(4);
+    
+    const ipInput = document.getElementById('ip-input');
+    const descInput = document.getElementById('description-input');
+    const ipHint = document.getElementById('ip-hint');
+    
+    ipInput.value = ipAddress;
+    ipHint.style.display = 'none';
+    
+    if (description) {
+        descInput.value = description;
+    }
+    
+    selectedHistoryRecord = null;
 }
 
 function renderSelectedPreview() {
@@ -394,14 +613,14 @@ function renderSelectedPreview() {
     });
 }
 
-async function goToStep4() {
+async function goToStep5() {
     const ipInput = document.getElementById('ip-input').value.trim();
     const descInput = document.getElementById('description-input').value.trim();
     
     document.getElementById('ip-error').textContent = '';
     
     if (!app) {
-        showMessage('step3-message', '无法连接到后端', 'error');
+        showMessage('step4-message', '无法连接到后端', 'error');
         return;
     }
     
@@ -413,12 +632,12 @@ async function goToStep4() {
         for (const resource of ecsResources) {
             const portValid = await app.ValidatePort(resource.port || '');
             if (!portValid.success) {
-                showMessage('step3-message', `安全组 "${resource.name}" 的端口配置错误: ${portValid.message}`, 'error');
+                showMessage('step4-message', `安全组 "${resource.name}" 的端口配置错误: ${portValid.message}`, 'error');
                 return;
             }
         }
     } catch (e) {
-        showMessage('step3-message', '验证失败: ' + (e.message || e), 'error');
+        showMessage('step4-message', '验证失败: ' + (e.message || e), 'error');
         return;
     }
     
@@ -431,7 +650,7 @@ async function goToStep4() {
     description = descInput;
     
     renderExecutionPreview();
-    goToStep(4);
+    goToStep(5);
 }
 
 function renderExecutionPreview() {
@@ -511,7 +730,7 @@ async function executeConfig() {
     if (!app) return;
     
     document.getElementById('execute-btn').disabled = true;
-    document.getElementById('step4-back').disabled = true;
+    document.getElementById('step5-back').disabled = true;
     document.getElementById('execution-progress').style.display = 'block';
     document.getElementById('execution-results').style.display = 'none';
     
@@ -559,7 +778,7 @@ async function executeConfig() {
         document.getElementById('restart-group').style.display = 'flex';
     } finally {
         document.getElementById('execute-btn').style.display = 'none';
-        document.getElementById('step4-back').style.display = 'none';
+        document.getElementById('step5-back').style.display = 'none';
     }
 }
 
@@ -570,10 +789,13 @@ function restart() {
     ipAddress = '';
     portNumber = 0;
     description = '';
+    historyRecords = [];
+    selectedHistoryRecord = null;
     
     document.getElementById('step1-message').textContent = '';
     document.getElementById('step2-message').textContent = '';
     document.getElementById('step3-message').textContent = '';
+    document.getElementById('step4-message').textContent = '';
     document.getElementById('ip-error').textContent = '';
     document.getElementById('ip-input').value = '';
     document.getElementById('description-input').value = '';
@@ -584,8 +806,8 @@ function restart() {
     document.getElementById('restart-group').style.display = 'none';
     document.getElementById('execute-btn').style.display = 'inline-block';
     document.getElementById('execute-btn').disabled = false;
-    document.getElementById('step4-back').style.display = 'inline-block';
-    document.getElementById('step4-back').disabled = false;
+    document.getElementById('step5-back').style.display = 'inline-block';
+    document.getElementById('step5-back').disabled = false;
     
     goToStep(1);
 }

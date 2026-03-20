@@ -17,14 +17,18 @@
                 </div>
                 <div class="step step-2" data-step="2">
                     <span class="step-number">2</span>
-                    <span class="step-label">选择资源</span>
+                    <span class="step-label">历史记录</span>
                 </div>
                 <div class="step step-3" data-step="3">
                     <span class="step-number">3</span>
-                    <span class="step-label">配置 IP</span>
+                    <span class="step-label">选择资源</span>
                 </div>
                 <div class="step step-4" data-step="4">
                     <span class="step-number">4</span>
+                    <span class="step-label">配置 IP</span>
+                </div>
+                <div class="step step-5" data-step="5">
+                    <span class="step-number">5</span>
                     <span class="step-label">执行配置</span>
                 </div>
             </div>
@@ -52,7 +56,19 @@
             </div>
 
             <div class="step-content step-2-content" id="step2">
-                <h2>步骤 2: 选择要配置的资源</h2>
+                <h2>步骤 2: 历史配置记录</h2>
+                <div class="history-section" id="history-section">
+                    <div class="history-list" id="history-list"></div>
+                </div>
+                <div class="button-group">
+                    <button class="btn-secondary" id="step2-back">返回上一步</button>
+                    <button class="btn-primary" id="step2-next">跳过，选择资源</button>
+                </div>
+                <div class="message" id="step2-message"></div>
+            </div>
+
+            <div class="step-content step-3-content" id="step3">
+                <h2>步骤 3: 选择要配置的资源</h2>
                 <div class="loading" id="resources-loading">
                     <div class="spinner"></div>
                     <p>正在加载资源列表...</p>
@@ -118,14 +134,14 @@
                     <div id="selected-list"></div>
                 </div>
                 <div class="button-group">
-                    <button class="btn-secondary" id="step2-back">返回上一步</button>
-                    <button class="btn-primary" id="step2-next">下一步</button>
+                    <button class="btn-secondary" id="step3-back">返回上一步</button>
+                    <button class="btn-primary" id="step3-next">下一步</button>
                 </div>
-                <div class="message" id="step2-message"></div>
+                <div class="message" id="step3-message"></div>
             </div>
 
-            <div class="step-content step-3-content" id="step3">
-                <h2>步骤 3: 配置 IP 地址</h2>
+            <div class="step-content step-4-content" id="step4">
+                <h2>步骤 4: 配置 IP 地址</h2>
                 <div class="form-group">
                     <label for="ip-input">IP 地址</label>
                     <div class="ip-hint" id="ip-hint" style="display: none; padding: 8px 10px; margin-bottom: 6px; background-color: #e7f3ff; border: 1px solid #b6d4fe; border-radius: 4px; color: #084298; font-size: 13px;">
@@ -141,17 +157,17 @@
                 </div>
                 <div class="selected-resources-preview" id="selected-preview"></div>
                 <div class="button-group">
-                    <button class="btn-secondary" id="step3-back">返回上一步</button>
-                    <button class="btn-primary" id="step3-next">下一步</button>
+                    <button class="btn-secondary" id="step4-back">返回上一步</button>
+                    <button class="btn-primary" id="step4-next">下一步</button>
                 </div>
-                <div class="message" id="step3-message"></div>
+                <div class="message" id="step4-message"></div>
             </div>
 
-            <div class="step-content step-4-content" id="step4">
-                <h2>步骤 4: 执行配置</h2>
+            <div class="step-content step-5-content" id="step5">
+                <h2>步骤 5: 执行配置</h2>
                 <div class="execution-preview" id="execution-preview"></div>
                 <div class="button-group">
-                    <button class="btn-secondary" id="step4-back">返回上一步</button>
+                    <button class="btn-secondary" id="step5-back">返回上一步</button>
                     <button class="btn-primary" id="execute-btn">开始执行</button>
                 </div>
                 <div class="execution-progress" id="execution-progress" style="display: none;">

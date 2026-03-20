@@ -103,6 +103,13 @@ type ExecutionResult struct {
 	Error   string `json:"error,omitempty"`
 }
 
+type HistoryRecordResult struct {
+	Success bool                   `json:"success"`
+	Message string                 `json:"message"`
+	Records []config.HistoryRecord `json:"records,omitempty"`
+	Error   string                 `json:"error,omitempty"`
+}
+
 func NewApp() *App {
 	return &App{}
 }
@@ -168,6 +175,63 @@ func (a *App) LoadSavedConfig() *Config {
 		AccessKeySecret: cfg.AccessKeySecret,
 		Region:          cfg.Region,
 	}
+}
+
+func (a *App) GetHistory() *HistoryRecordResult {
+	result := &HistoryRecordResult{}
+
+	records, err := config.LoadHistory()
+	if err != nil {
+		result.Success = false
+		result.Message = "加载历史记录失败"
+		result.Error = err.Error()
+		return result
+	}
+
+	result.Success = true
+	result.Message = "加载历史记录成功"
+	result.Records = records
+	return result
+}
+
+func (a *App) SaveHistoryRecord(ipAddress string, port int, description string, resources []SelectedResource) *ExecutionResult {
+	result := &ExecutionResult{}
+
+	record := config.HistoryRecord{
+		ID:          generateRecordID(),
+		Timestamp:   time.Now(),
+		IPAddress:   ipAddress,
+		Port:        port,
+		Description: description,
+		Resources:   make([]config.HistoryResource, 0, len(resources)),
+	}
+
+	for _, r := range resources {
+		record.Resources = append(record.Resources, config.HistoryResource{
+			Type:            r.Type,
+			Id:              r.Id,
+			Name:            r.Name,
+			SecurityIpGroup: r.SecurityIpGroup,
+			Port:            r.Port,
+			Description:     r.Description,
+		})
+	}
+
+	if err := config.SaveHistory(record); err != nil {
+		result.Success = false
+		result.Message = "保存历史记录失败"
+		result.Error = err.Error()
+		logger.Error("failed to save history", "error", err)
+		return result
+	}
+
+	result.Success = true
+	result.Message = "保存历史记录成功"
+	return result
+}
+
+func generateRecordID() string {
+	return fmt.Sprintf("%d", time.Now().UnixNano())
 }
 
 func (a *App) LoadResources() *Resources {
@@ -522,6 +586,18 @@ func (a *App) ExecuteConfig(ip string, port int, description string, resources [
 		}
 
 		results = append(results, result)
+	}
+
+	hasSuccess := false
+	for _, r := range results {
+		if r.Success {
+			hasSuccess = true
+			break
+		}
+	}
+
+	if hasSuccess {
+		a.SaveHistoryRecord(ip, port, description, resources)
 	}
 
 	return results

@@ -191,7 +191,6 @@ function renderResourceList(containerId, items, type, idField, nameField) {
                         </select>
                     </div>
                 ` : ''}
-                ${type === 'ecs' ? '' : ''}
             </div>
         `;
         

@@ -508,6 +508,7 @@ function applyHistoryToStep4() {
     const ipInput = document.getElementById('ip-input');
     const descInput = document.getElementById('description-input');
     const ipHint = document.getElementById('ip-hint');
+    const ipHintText = document.getElementById('ip-hint-text');
     
     ipInput.value = ipAddress;
     ipHint.style.display = 'none';
@@ -516,7 +517,30 @@ function applyHistoryToStep4() {
         descInput.value = description;
     }
     
+    if (app) {
+        setTimeout(async () => {
+            try {
+                const result = await app.GetPublicIP();
+                if (result.success && result.message) {
+                    const currentIP = result.message;
+                    if (currentIP !== ipAddress) {
+                        ipHint.style.display = 'block';
+                        ipHintText.innerHTML = `检测到当前公网IP已变更为 <strong>${currentIP}</strong>，是否更新？<button onclick="updateIPToCurrent('${currentIP}')" style="margin-left: 10px; padding: 4px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">使用当前IP</button>`;
+                    }
+                }
+            } catch (e) {
+                console.log('Failed to get public IP:', e);
+            }
+        }, 500);
+    }
+    
     selectedHistoryRecord = null;
+}
+
+function updateIPToCurrent(currentIP) {
+    document.getElementById('ip-input').value = currentIP;
+    document.getElementById('ip-hint').style.display = 'none';
+    document.getElementById('ip-hint-text').textContent = '系统已自动获取您当前的公网 IP 地址作为默认值，您可以根据需要进行修改或保留。';
 }
 
 function renderSelectedPreview() {

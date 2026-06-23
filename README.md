@@ -265,11 +265,11 @@ go test ./...
 
 ### aksk存储路径？
 
-C:\Users\您的用户名\.aliyun-ip-manager\config.json
+C:\Users\您的用户名\\.aliyun-ip-manager\config.json
 
 ### 历史记录存储路径？
 
-C:\Users\您的用户名\.aliyun-ip-manager\history.json
+C:\Users\您的用户名\\.aliyun-ip-manager\history.json
 
 
 ## 贡献指南
